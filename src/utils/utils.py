@@ -5,9 +5,9 @@ from tensorflow.experimental import numpy as tnp
 class MyLRSchedule(tf.keras.optimizers.schedules.LearningRateSchedule):
     def __init__(self,
                  learning_rate: float = 6e-4,
-                 warmup_iters: int = 10,                
+                 warmup_iters: int = 10,
                  min_lr: float = 6e-5,
-                 lr_decay_iters: int= 100):
+                 lr_decay_iters: int = 100):
     
         self.learning_rate = learning_rate
         self.warmup_iters = warmup_iters
@@ -18,14 +18,14 @@ class MyLRSchedule(tf.keras.optimizers.schedules.LearningRateSchedule):
         def res():            
             return self.learning_rate * float(step) / self.warmup_iters
         return res
-        
+
     def late(self):
         return self.min_lr
     
     def middle(self, step):
         def res():
             decay_ratio = (float(step) - self.warmup_iters) / (self.lr_decay_iters - self.warmup_iters)
-            #assert 0 <= decay_ratio <= 1
+            # assert 0 <= decay_ratio <= 1
             coeff = 0.5 * (1.0 + tf.math.cos(tnp.pi * decay_ratio))        
             return self.min_lr + coeff * (self.learning_rate - self.min_lr)
         return res
@@ -47,13 +47,14 @@ def to_dataset(sequence, length, shuffle=False, seed=None, batch_size=512):
     ds = ds.batch(batch_size)
     return ds.map(lambda window: (window[:, :-1], window[:, 1:])).prefetch(1)
 
+
 class Context():
     def __init__(self,
-                 optimizer=None, 
-                 loss_object=None, 
-                 train_accuracy=None, 
-                 val_accuracy=None, 
-                 val_loss=None, 
+                 optimizer=None,
+                 loss_object=None,
+                 train_accuracy=None,
+                 val_accuracy=None,
+                 val_loss=None,
                  callbacks=None,
                  strategy=None,
                  manager=None,
@@ -62,16 +63,16 @@ class Context():
                  step=None,
                  train_set_dist=None,
                  valid_set_dist=None):
-        self.optimizer=optimizer
-        self.loss_object=loss_object
-        self.train_accuracy=train_accuracy
-        self.val_accuracy=val_accuracy
-        self.val_loss=val_loss
-        self.callbacks=callbacks
-        self.strategy=strategy
-        self.manager=manager
-        self.ckpt=ckpt
-        self.best_val_loss=best_val_loss
-        self.step=step
-        self.train_set_dist=train_set_dist
-        self.valid_set_dist=valid_set_dist
+        self.optimizer = optimizer
+        self.loss_object = loss_object
+        self.train_accuracy = train_accuracy
+        self.val_accuracy = val_accuracy
+        self.val_loss = val_loss
+        self.callbacks = callbacks
+        self.strategy = strategy
+        self.manager = manager
+        self.ckpt = ckpt
+        self.best_val_loss = best_val_loss
+        self.step = step
+        self.train_set_dist = train_set_dist
+        self.valid_set_dist = valid_set_dist

@@ -3,7 +3,6 @@ import tensorflow_probability as tfp
 from layers.layers import *
 
 
-
 class GPT(tf.keras.models.Model):
     def __init__(self, config):
         super().__init__()
@@ -26,9 +25,7 @@ class GPT(tf.keras.models.Model):
                                              name='wpe')
         
         self.drop = tf.keras.layers.Dropout(self.config.dropout, name='drop')
-        
         self.h = [Block(self.config) for _ in range(self.config.n_layer)]
-        
         self.ln_f = MyLayerNorm(bias=self.config.bias, name='ln_f')
         
         # Crucial for mixed precision: final model output should be of dtype='float32'
@@ -42,9 +39,8 @@ class GPT(tf.keras.models.Model):
     @tf.function(jit_compile=True)
     def call(self, idx):
         b, t = idx.shape
-        #assert t <= self.config.block_size, f'sequence too long for the defined context of {self.config.block_size}'
+        # assert t <= self.config.block_size, f'sequence too long for the defined context of {self.config.block_size}'
         pos = tf.range(0, t, dtype=tf.int64)
-
         tok_emb = self.wte(idx)
         pos_emb = self.wpe(pos)
         x = self.drop(tok_emb + pos_emb)
@@ -58,7 +54,7 @@ class GPT(tf.keras.models.Model):
         self.config.block_size = block_size
         self.wpe.weights[0] = tf.Variable(self.wpe.weights[0][:block_size], trainable=True)
         for block in self.h:
-            #if hasattr(block.attn, 'bias'):
+            # if hasattr(block.attn, 'bias'):
             if len(block.attn.weights) == 2:
                 block.attn.bias = block.attn.bias[:, :, :block_size, :block_size]
                   

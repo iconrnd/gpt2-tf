@@ -1,6 +1,7 @@
 import tensorflow as tf
 import numpy as np
 
+
 class MyLayerNorm(tf.keras.layers.Layer):
     def __init__(self, bias=True, eps=1e-6, **kwargs):
         super().__init__(**kwargs)
@@ -19,6 +20,7 @@ class MyLayerNorm(tf.keras.layers.Layer):
                                       trainable=True) if self.bias else None
 
         super(MyLayerNorm, self).build(input_shape)
+
     @tf.function(jit_compile=True)
     def call(self, x):
         # Can also use tf.nn.moments(inputs, axes=-1, keepdims=True), 
@@ -27,7 +29,6 @@ class MyLayerNorm(tf.keras.layers.Layer):
         std = tf.keras.backend.std(x, axis=-1, keepdims=True)
         
         return self.weight * (x - mean) / (std + self.eps) + self.bias
-
 
 
 class CausalSelfAttention(tf.keras.layers.Layer):
@@ -59,6 +60,7 @@ class CausalSelfAttention(tf.keras.layers.Layer):
         B, T, C = x.size() # batch, sequence and channel, which is the embedding dim
 
         q, k, v = self.c_attn(x).split(self.n_embd, axis=2)
+
         k = tf.transpose(tf.reshape(k, [B, T, self.n_head, C // self.n_head]),
                          perm=[0, 2, 1, 3])
         q = tf.transpose(tf.reshape(q, [B, T, self.n_head, C // self.n_head]),
@@ -67,17 +69,14 @@ class CausalSelfAttention(tf.keras.layers.Layer):
                          perm=[0, 2, 1, 3])
 
         att = (q @ tf.transpose(k, perm=[0, 1, 3, 2])) * (1.0 / tf.math.sqrt(k.shape[-1]))
-
         mask = tf.experimental.numpy.tril(tf.ones([T, T]))[tf.newaxis, tf.newaxis, :, :]
         att = tf.where(mask != 0, att, tf.constant(-np.inf))
         att = tf.nn.softmax(att, axis = 3)
         att = self.attn_dropout(att)
         y = att @ v
-
         y = tf.reshape(tf.transpose(y, perm=[0, 2, 1, 3]), [B, T, C])
 
         return self.resid_dropout(self.c_proj(y))
-
 
 
 class MLP(tf.keras.layers.Layer):
@@ -97,7 +96,7 @@ class MLP(tf.keras.layers.Layer):
         x = self.gelu(x)
         x = self.c_proj(x)
         return self.dropout(x)
-        
+
 
 class Block(tf.keras.layers.Layer):
     def __init__(self, config):
@@ -110,4 +109,4 @@ class Block(tf.keras.layers.Layer):
     @tf.function(jit_compile=True)
     def forward(self, x):
         x = x + self.attn(self.ln_1(x))
-        return x + self.mlp(self.ln_2(x))        
+        return x + self.mlp(self.ln_2(x))
