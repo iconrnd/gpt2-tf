@@ -25,9 +25,9 @@ def get_model_and_ctx(model_config, restore=False):
             name='train_accuracy')
         ctx.val_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(
             name='val_accuracy')
-        
+
         global_batch_size = global_config.batch_per_replica * ctx.strategy.num_replicas_in_sync
-        
+
         train_set, valid_set = get_datasets(global_batch_size)
         ctx.train_set_dist = ctx.strategy.experimental_distribute_dataset(train_set)
         ctx.valid_set_dist = ctx.strategy.experimental_distribute_dataset(valid_set.take(global_config.eval_iters))
@@ -39,7 +39,7 @@ def get_model_and_ctx(model_config, restore=False):
         ctx.callbacks = tf.keras.callbacks.CallbackList([
             tb_callback
         ])
-        
+
         ctx.optimizer = tf.keras.optimizers.AdamW(learning_rate=MyLRSchedule(global_config.learning_rate, 
             global_config.warmup_iters, global_config.min_lr, global_config.lr_decay_iters))
         ctx.optimizer = tf.keras.mixed_precision.LossScaleOptimizer(ctx.optimizer)
@@ -65,7 +65,7 @@ def get_model_and_ctx(model_config, restore=False):
             ctx.train_accuracy = ctx.ckpt.train_accuracy
             ctx.val_accuracy = ctx.ckpt.val_accuracy
             ctx.val_loss = ctx.ckpt.val_loss
-    
+
     return model, ctx
 
 
@@ -140,7 +140,7 @@ def training(model, ctx):
 
         # Train Epoch            
         train_loss = distributed_train_epoch(step, model, ctx)
-        
+
         # Val Epoch
         distributed_val_epoch(step, model, ctx)
         ctx.callbacks.on_epoch_end(step)
@@ -156,13 +156,13 @@ def training(model, ctx):
                 ctx.ckpt.step.assign(step)
                 ctx.ckpt.best_val_loss.assign(ctx.best_val_loss)
                 ctx.manager.save()
-        
+
         ctx.train_accuracy.reset_states()
         ctx.val_accuracy.reset_states()
         ctx.val_loss.reset_states()
-        
+
         step += 1
         if step > global_config.max_iters:
             break
-            
+
     ctx.callbacks.on_train_end()

@@ -7,7 +7,7 @@ class MyLayerNorm(tf.keras.layers.Layer):
         super().__init__(**kwargs)
         self.eps = eps
         self.bias = bias
-       
+
     def build(self, input_shape):  
         self.weight = self.add_weight(name='weight',
                                       shape=input_shape[-1:], # [-1:] gives last elem but keeps dims
@@ -27,7 +27,7 @@ class MyLayerNorm(tf.keras.layers.Layer):
         # but then additionally one needs to take the sqrt to get \sigma
         mean = tf.keras.backend.mean(x, axis=-1, keepdims=True)
         std = tf.keras.backend.std(x, axis=-1, keepdims=True)
-        
+
         return self.weight * (x - mean) / (std + self.eps) + self.bias
 
 
@@ -53,10 +53,10 @@ class CausalSelfAttention(tf.keras.layers.Layer):
 
         self.mask = tf.experimental.numpy.tril(
             tf.ones([config.block_size, config.block_size]))[tf.newaxis, tf.newaxis, :, :]
-    
+
     @tf.function(jit_compile=True)
     def forward(self, x):
-        
+
         B, T, C = x.size() # batch, sequence and channel, which is the embedding dim
 
         q, k, v = self.c_attn(x).split(self.n_embd, axis=2)
@@ -89,7 +89,7 @@ class MLP(tf.keras.layers.Layer):
         self.c_proj = tf.keras.layers.Dense(config.n_embd, activation=None, kernel_initializer=self.initializer_proj, use_bias=config.bias)
         self.gelu = tf.keras.activations.gelu
         self.dropout = tf.keras.layers.Dropout(config.dropout)
-    
+
     @tf.function(jit_compile=True)
     def forward(self, x):
         x = self.c_fc(x)
@@ -105,7 +105,7 @@ class Block(tf.keras.layers.Layer):
         self.attn = CausalSelfAttention(config)
         self.ln_2 = MyLayerNorm(bias=config.bias)
         self.mlp = MLP(config)
-    
+
     @tf.function(jit_compile=True)
     def forward(self, x):
         x = x + self.attn(self.ln_1(x))

@@ -13,7 +13,7 @@ class GPT(tf.keras.models.Model):
         self.initializer_dense = tf.keras.initializers.RandomNormal(mean=0.0, stddev=0.02, seed=self.config.seed)
         self.initializer_embed = tf.keras.initializers.RandomNormal(mean=0.0, stddev=0.02, seed=self.config.seed)
         self.initializer_bias = tf.keras.initializers.Zeros()
-        
+
         self.wte = tf.keras.layers.Embedding(self.config.vocab_size, 
                                              self.config.n_embd, 
                                              embeddings_initializer=self.initializer_embed, 
@@ -23,11 +23,11 @@ class GPT(tf.keras.models.Model):
                                              self.config.n_embd, 
                                              embeddings_initializer=self.initializer_embed, 
                                              name='wpe')
-        
+
         self.drop = tf.keras.layers.Dropout(self.config.dropout, name='drop')
         self.h = [Block(self.config) for _ in range(self.config.n_layer)]
         self.ln_f = MyLayerNorm(bias=self.config.bias, name='ln_f')
-        
+
         # Crucial for mixed precision: final model output should be of dtype='float32'
         self.lm_head = tf.keras.layers.Dense(self.config.vocab_size, use_bias=self.config.bias, dtype='float32')
 
@@ -35,7 +35,7 @@ class GPT(tf.keras.models.Model):
         self.wte.build(input_shape=[self.config.vocab_size])
         self.lm_head.build(input_shape=[self.config.n_embd])
         self.wte.trainable_weights[0].assign(tf.transpose(self.lm_head.trainable_weights[0]))
-    
+
     @tf.function(jit_compile=True)
     def call(self, idx):
         b, t = idx.shape
@@ -57,13 +57,13 @@ class GPT(tf.keras.models.Model):
             # if hasattr(block.attn, 'bias'):
             if len(block.attn.weights) == 2:
                 block.attn.bias = block.attn.bias[:, :, :block_size, :block_size]
-                  
+
     def get_num_params(self, non_embedding=True):
         n_params = self.count_params()
         if non_embedding:
             n_params -= self.wpe.count_params()
         return n_params
-        
+
     def estimate_mfu(self, fwdbwd_per_iter, dt):
         N = self.get_num_params()
         L, H, Q, T = self.config.n_layer, self.config.n_head, self.config.n_embd / self.config.n_head, self.config.block_size
@@ -74,7 +74,7 @@ class GPT(tf.keras.models.Model):
         flops_promised = 312e12 # A100 at bfloat16
         mfu = flops_achieved / flops_promised
         return mfu
-        
+
     @tf.function(jit_compile=True)
     def generate(self, idx, max_new_tokens, temperature=1.0, top_k=None):
         for i in range(max_new_tokens):
