@@ -1,28 +1,27 @@
 globals:
-  batch_per_replica: 512
+  batch_per_replica: 1024
   best_val_loss: 1e9
   weight_decay: 1e-1
-  warmup_iters: 50
+  warmup_iters: 3
   learning_rate: 6e-4
-  max_iters: 250
-  lr_decay_iters: 250
+  max_iters: 10000
+  lr_decay_iters: 10000
   min_lr: 6e-5
-  eval_iters: 20
+  eval_iters: 50
   grad_clip: 1.0
   eval_only: False
-  eval_interval: 1
+  eval_interval: 100
   always_save_checkpoint: True
   checkpoint_directory: "./checkpoints"
   log_dir: "./tensorboard"
   buffer_size: 100_000
 
 gpt:
-  n_layer: 8
-  n_head: 8
-  n_embd: 32
-  block_size: 32
+  n_layer: 12
+  n_head: 12
+  n_embd: 768
+  block_size: 512
   bias: True
   vocab_size: 39
   dropout: 0.1
   seed: 1337
-  

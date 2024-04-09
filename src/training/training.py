@@ -102,7 +102,7 @@ def train_step(sample, model, ctx):
     ctx.optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     ctx.train_accuracy.update_state(tf.reshape(Y, [-1]),
                                     tf.reshape(logits, [-1, logits.shape[-1]]))
-    return loss
+    return loss, ctx.optimizer.learning_rate
 
 
 @tf.function
@@ -121,13 +121,20 @@ def distributed_train_epoch(step, model, ctx):
     num_batches = 0
     for sample in ctx.train_set_dist:
         # ctx.callbacks.on_train_batch_begin(step)
-        per_replica_losses = ctx.strategy.run(train_step, args=(sample, model, ctx, ))
+        per_replica_losses, per_replica_lr = ctx.strategy.run(train_step, args=(sample, model, ctx, ))
         # ctx.callbacks.on_train_batch_end(step)
         total_loss += ctx.strategy.reduce(
             tf.distribute.ReduceOp.SUM,
             per_replica_losses,
             axis=None)
         num_batches += 1
+        lr_mean = ctx.strategy.reduce(
+            tf.distribute.ReduceOp.MEAN,
+            per_replica_lr,
+            axis=None)
+        with ctx.writer.as_default():
+            tf.summary.scalar('Learning Rate', lr_mean, step=step)
+
     return total_loss / float(num_batches)
 
 
@@ -161,7 +168,6 @@ def training(model, ctx):
             tf.summary.scalar('Accuracy', ctx.train_accuracy.result() * 100, step=step)
             tf.summary.scalar('Val Loss', ctx.val_loss.result(), step=step)
             tf.summary.scalar('Val Accuracy', ctx.val_accuracy.result() * 100, step=step)
-            tf.summary.scalar('Learning Rate', ctx.optimizer.learning_rate, step=step)
 
         # Checkpointing
         if step > 0:
