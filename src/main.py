@@ -2,7 +2,7 @@ import sys
 import tensorflow as tf
 from config.config import model_config
 import argparse
-from training.training import *
+from training.training import get_model_and_ctx, training
 tf.keras.mixed_precision.set_global_policy('mixed_bfloat16')
 
 

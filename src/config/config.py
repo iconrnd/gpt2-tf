@@ -5,23 +5,23 @@ from ruamel.yaml import YAML
 
 class GlobalConfig():
     def __init__(self,
-                batch_per_replica: int = 512,
-                best_val_loss: float = 1e9,
-                weight_decay: float = 1e-1,
-                warmup_iters: int = 50,
-                learning_rate: float = 6e-4,
-                max_iters: int = 250,
-                lr_decay_iters: int = 250,
-                min_lr: float = 6e-5,
-                eval_iters: int = 20,
-                grad_clip: float = 1.0,
-                eval_only: bool = False,
-                eval_interval: int = 1,
-                always_save_checkpoint: bool = True,
-                restore: bool = False,
-                checkpoint_directory: str = '',
-                log_dir: str = '',
-                buffer_size: int = 100_000):
+                 batch_per_replica: int = 512,
+                 best_val_loss: float = 1e9,
+                 weight_decay: float = 1e-1,
+                 warmup_iters: int = 50,
+                 learning_rate: float = 6e-4,
+                 max_iters: int = 250,
+                 lr_decay_iters: int = 250,
+                 min_lr: float = 6e-5,
+                 eval_iters: int = 20,
+                 grad_clip: float = 1.0,
+                 eval_only: bool = False,
+                 eval_interval: int = 1,
+                 always_save_checkpoint: bool = True,
+                 restore: bool = False,
+                 checkpoint_directory: str = '',
+                 log_dir: str = '',
+                 buffer_size: int = 100_000):
         self.batch_per_replica = batch_per_replica
         self.best_val_loss = best_val_loss
         self.weight_decay = weight_decay

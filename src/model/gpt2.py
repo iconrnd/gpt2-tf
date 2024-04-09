@@ -1,6 +1,6 @@
 import tensorflow as tf
 import tensorflow_probability as tfp
-from layers.layers import *
+from layers.layers import Block, MyLayerNorm
 
 
 class GPT(tf.keras.models.Model):
@@ -14,14 +14,14 @@ class GPT(tf.keras.models.Model):
         self.initializer_embed = tf.keras.initializers.RandomNormal(mean=0.0, stddev=0.02, seed=self.config.seed)
         self.initializer_bias = tf.keras.initializers.Zeros()
 
-        self.wte = tf.keras.layers.Embedding(self.config.vocab_size, 
-                                             self.config.n_embd, 
-                                             embeddings_initializer=self.initializer_embed, 
+        self.wte = tf.keras.layers.Embedding(self.config.vocab_size,
+                                             self.config.n_embd,
+                                             embeddings_initializer=self.initializer_embed,
                                              name='wte')
-        
-        self.wpe = tf.keras.layers.Embedding(self.config.block_size, 
-                                             self.config.n_embd, 
-                                             embeddings_initializer=self.initializer_embed, 
+
+        self.wpe = tf.keras.layers.Embedding(self.config.block_size,
+                                             self.config.n_embd,
+                                             embeddings_initializer=self.initializer_embed,
                                              name='wpe')
 
         self.drop = tf.keras.layers.Dropout(self.config.dropout, name='drop')
@@ -71,7 +71,7 @@ class GPT(tf.keras.models.Model):
         flops_per_fwdbwd = flops_per_token * T
         flops_per_iter = flops_per_fwdbwd * fwdbwd_per_iter
         flops_achieved = flops_per_iter * (1.0/dt)
-        flops_promised = 312e12 # A100 at bfloat16
+        flops_promised = 312e12  # A100 at bfloat16
         mfu = flops_achieved / flops_promised
         return mfu
 

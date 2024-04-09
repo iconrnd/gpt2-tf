@@ -15,7 +15,7 @@ class MyLRSchedule(tf.keras.optimizers.schedules.LearningRateSchedule):
         self.lr_decay_iters = lr_decay_iters
 
     def warmup(self, step):
-        def res():            
+        def res():
             return self.learning_rate * float(step) / self.warmup_iters
         return res
 
@@ -26,15 +26,15 @@ class MyLRSchedule(tf.keras.optimizers.schedules.LearningRateSchedule):
         def res():
             decay_ratio = (float(step) - self.warmup_iters) / (self.lr_decay_iters - self.warmup_iters)
             # assert 0 <= decay_ratio <= 1
-            coeff = 0.5 * (1.0 + tf.math.cos(tnp.pi * decay_ratio))        
+            coeff = 0.5 * (1.0 + tf.math.cos(tnp.pi * decay_ratio))
             return self.min_lr + coeff * (self.learning_rate - self.min_lr)
         return res
 
     @tf.function(jit_compile=True)
     def __call__(self, step):
         lr = tf.case([(tf.less(step, self.warmup_iters), self.warmup(step)),
-                   (tf.greater(step, self.lr_decay_iters), self.late)],
-                   default=self.middle(step), exclusive=True)
+                     (tf.greater(step, self.lr_decay_iters), self.late)],
+                     default=self.middle(step), exclusive=True)
         return lr
 
 
