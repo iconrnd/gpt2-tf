@@ -35,6 +35,7 @@ class MyLRSchedule(tf.keras.optimizers.schedules.LearningRateSchedule):
         lr = tf.case([(tf.less(step, self.warmup_iters), self.warmup(step)),
                      (tf.greater(step, self.lr_decay_iters), self.late)],
                      default=self.middle(step), exclusive=True)
+
         return lr
 
 
