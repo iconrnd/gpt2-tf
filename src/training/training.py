@@ -34,11 +34,15 @@ def get_model_and_ctx(model_config, restore=False):
 
         model = build_model(model_config)
 
-        tb_callback = tf.keras.callbacks.TensorBoard(log_dir=global_config.log_dir)
-        tb_callback.set_model(model)
-        ctx.callbacks = tf.keras.callbacks.CallbackList([
-            tb_callback
-        ])
+        # This is how callbacks can be incorporated with custom loop
+        # We use custom summary writer instead
+        # tb_callback = tf.keras.callbacks.TensorBoard(log_dir=global_config.log_dir)
+        # tb_callback.set_model(model)
+        # ctx.callbacks = tf.keras.callbacks.CallbackList([
+        #     tb_callback
+        # ])
+
+        ctx.writer = tf.summary.create_file_writer(str(global_config.log_dir))
 
         ctx.optimizer = tf.keras.optimizers.AdamW(learning_rate=MyLRSchedule(global_config.learning_rate,
                                                                              global_config.warmup_iters,
@@ -116,9 +120,9 @@ def distributed_train_epoch(step, model, ctx):
     total_loss = 0.0
     num_batches = 0
     for sample in ctx.train_set_dist:
-        ctx.callbacks.on_train_batch_begin(step)
+        # ctx.callbacks.on_train_batch_begin(step)
         per_replica_losses = ctx.strategy.run(train_step, args=(sample, model, ctx, ))
-        ctx.callbacks.on_train_batch_end(step)
+        # ctx.callbacks.on_train_batch_end(step)
         total_loss += ctx.strategy.reduce(
             tf.distribute.ReduceOp.SUM,
             per_replica_losses,
@@ -129,27 +133,35 @@ def distributed_train_epoch(step, model, ctx):
 
 def distributed_val_epoch(step, model, ctx):
     for sample in ctx.valid_set_dist:
-        ctx.callbacks.on_test_batch_begin(step)
+        # ctx.callbacks.on_test_batch_begin(step)
         ctx.strategy.run(val_step, args=(sample, model, ctx, ))
-        ctx.callbacks.on_test_batch_end(step)
+        # ctx.callbacks.on_test_batch_end(step)
 
 
 def training(model, ctx):
     step = ctx.step
-    ctx.callbacks.on_train_begin()
+    # ctx.callbacks.on_train_begin()
 
     while True:
-        ctx.callbacks.on_epoch_begin(step)
+        # ctx.callbacks.on_epoch_begin(step)
 
         # Train Epoch
         train_loss = distributed_train_epoch(step, model, ctx)
 
         # Val Epoch
         distributed_val_epoch(step, model, ctx)
-        ctx.callbacks.on_epoch_end(step)
+        # ctx.callbacks.on_epoch_end(step)
         out_format = ("Epoch {}\nLoss: {}, Accuracy: {}\nVal Loss: {}, Val Accuracy: {}")
         print(out_format.format(step, train_loss, ctx.train_accuracy.result() * 100,
               ctx.val_loss.result(), ctx.val_accuracy.result() * 100))
+
+        with ctx.writer.as_default():
+            tf.summary.scalar('Epoch', step, step=step)
+            tf.summary.scalar('Loss', train_loss, step=step)
+            tf.summary.scalar('Accuracy', ctx.train_accuracy.result() * 100, step=step)
+            tf.summary.scalar('Val Loss', ctx.val_loss.result(), step=step)
+            tf.summary.scalar('Val Accuracy', ctx.val_accuracy.result() * 100, step=step)
+            tf.summary.scalar('Learning Rate', ctx.optimizer.learning_rate, step=step)
 
         # Checkpointing
         if step > 0:
@@ -168,4 +180,4 @@ def training(model, ctx):
         if step > global_config.max_iters:
             break
 
-    ctx.callbacks.on_train_end()
+    # ctx.callbacks.on_train_end()
