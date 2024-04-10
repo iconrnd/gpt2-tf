@@ -11,6 +11,7 @@ https://github.com/karpathy/nanoGPT
 *  Mixed precision training
 *  JIT compiled tf.functions()
 *  Callbacks with custom training loop
+*  Custom LR Scheduler
 *  Code in src divided into separate modules as a standalone commandline app
 *  Custom events writer for TensorBoard
 *  Checkpointing
