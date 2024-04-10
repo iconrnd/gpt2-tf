@@ -1,8 +1,10 @@
-import tensorflow as tf
-from config.config import model_config
-from training.training import get_model_and_ctx, training
-tf.keras.mixed_precision.set_global_policy('mixed_bfloat16')
+import os
 
-model, ctx = get_model_and_ctx(model_config, restore=False)
+# This can be put to requirements.txt
+os.system('pip install ruamel.yaml')
+os.system('pip install tensorflow==2.15.1')
+os.system('pip install tensorflow_probability==0.22.0')
 
-training(model, ctx)
+os.system('git clone https://github.com/iconrnd/gpt2-tf.git')
+
+os.system('cd ./gpt2-tf/src/; python main.py')
