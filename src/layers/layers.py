@@ -17,7 +17,7 @@ class MyLayerNorm(tf.keras.layers.Layer):
         self.bias = self.add_weight(name='bias',
                                     shape=input_shape[-1:],  # [-1:] gives last elem but keeps dims
                                     initializer=tf.keras.initializers.Zeros(),
-                                    trainable=True) if self.bias else None
+                                    trainable=True) if self.bias else 0
 
         super(MyLayerNorm, self).build(input_shape)
 
@@ -29,6 +29,22 @@ class MyLayerNorm(tf.keras.layers.Layer):
         std = tf.keras.backend.std(x, axis=-1, keepdims=True)
 
         return self.weight * (x - mean) / (std + self.eps) + self.bias
+
+
+class WrappedMultiHeadAttention(tf.keras.layers.Layer):
+    def __init__(self, config):
+        super().__init__()
+        assert config.n_embd % config.n_head == 0, "Embedding dimension must divide number of heads"
+        self.initializer_proj = tf.keras.initializers.RandomNormal(mean=0.0, stddev=0.02 / tf.math.sqrt(2. * config.n_layer), seed=None)
+        self.attn = tf.keras.layers.MultiHeadAttention(
+                                                       num_heads=config.n_head,
+                                                       key_dim=config.n_embd,
+                                                       value_dim=config.n_embd,
+                                                       dropout=config.dropout,
+                                                       use_bias=config.bias,
+                                                       #output_shape=None,
+                                                       kernel_initializer='glorot_uniform',
+                                                       )
 
 
 class CausalSelfAttention(tf.keras.layers.Layer):
@@ -100,7 +116,8 @@ class Block(tf.keras.layers.Layer):
     def __init__(self, config):
         super().__init__()
         self.ln_1 = MyLayerNorm(bias=config.bias)
-        self.attn = CausalSelfAttention(config)
+        # self.attn = CausalSelfAttention(config)
+        self.attn = WrappedMultiHeadAttention(config)
         self.ln_2 = MyLayerNorm(bias=config.bias)
         self.mlp = MLP(config)
 
