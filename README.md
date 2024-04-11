@@ -12,6 +12,7 @@ https://github.com/karpathy/nanoGPT
 *  JIT compiled tf.functions()
 *  Callbacks with custom training loop
 *  Custom LR Scheduler
+*  TikToken and TextVectorization encoders
 *  Code in src divided into separate modules as a standalone commandline app
 *  Custom events writer for TensorBoard
 *  Checkpointing

@@ -3,7 +3,7 @@ import os
 from config.config import global_config
 from utils.utils import Context, MyLRSchedule
 from model.gpt2 import GPT
-from data.dataset import get_datasets
+from data.dataset import get_datasets_tiktok
 
 
 def build_model(model_config):
@@ -28,7 +28,7 @@ def get_model_and_ctx(model_config, restore=False):
 
         global_batch_size = global_config.batch_per_replica * ctx.strategy.num_replicas_in_sync
 
-        train_set, valid_set = get_datasets(global_batch_size, model_config)
+        train_set, valid_set = get_datasets_tiktok(global_batch_size, model_config)
         ctx.train_set_dist = ctx.strategy.experimental_distribute_dataset(train_set)
         ctx.valid_set_dist = ctx.strategy.experimental_distribute_dataset(valid_set.take(global_config.eval_iters))
 

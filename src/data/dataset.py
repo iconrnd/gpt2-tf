@@ -1,4 +1,5 @@
 import tensorflow as tf
+import tiktoken
 from config.config import global_config
 
 
@@ -30,5 +31,25 @@ def get_datasets(batch_size, model_config):
 
     train_set = to_dataset(encoded[:1_060_000], batch_size=batch_size, seed=model_config.seed, length=model_config.block_size, shuffle=True)
     valid_set = to_dataset(encoded[1_060_000:], batch_size=batch_size, seed=model_config.seed, length=model_config.block_size)
+
+    return train_set, valid_set
+
+
+def get_datasets_tiktok(batch_size, model_config):
+    shakespear_url = "https://homl.info/shakespeare"
+    filepath = tf.keras.utils.get_file('shakespear.txt', shakespear_url)
+
+    with open(filepath, 'r', encoding='utf-8') as f:
+        shakespear_txt = f.read()
+
+    encoder = tiktoken.get_encoding("gpt2")
+
+    data_len = len(shakespear_txt)
+
+    train_data = encoder.encode_ordinary(shakespear_txt[int(0.9 * data_len):])
+    valid_data = encoder.encode_ordinary(shakespear_txt[:int(0.9 * data_len)])
+
+    train_set = to_dataset(train_data, batch_size=batch_size, seed=model_config.seed, length=model_config.block_size, shuffle=True)
+    valid_set = to_dataset(valid_data, batch_size=batch_size, seed=model_config.seed, length=model_config.block_size)
 
     return train_set, valid_set

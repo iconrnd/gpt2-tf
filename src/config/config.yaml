@@ -22,6 +22,6 @@ gpt:
   n_embd: 32
   block_size: 64
   bias: True
-  vocab_size: 39
+  vocab_size: 50257
   dropout: 0.1
   seed: 1337
