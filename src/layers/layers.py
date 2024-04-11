@@ -42,7 +42,6 @@ class WrappedMultiHeadAttention(tf.keras.layers.Layer):
                                                        value_dim=config.n_embd,
                                                        dropout=config.dropout,
                                                        use_bias=config.bias,
-                                                       #output_shape=None,
                                                        kernel_initializer='glorot_uniform',
                                                        )
 
