@@ -24,15 +24,18 @@ def get_datasets(batch_size, model_config):
                                                        standardize='lower')
     text_vec_layer.adapt([shakespear_txt])
     encoded = text_vec_layer([shakespear_txt])[0]
-    encoded -= 2
+    encoded_len = len(encoded)
 
-    # n_tokens = text_vec_layer.vocabulary_size() - 2
-    # n_tokens == 32
+    n_tokens = text_vec_layer.vocabulary_size() - 2
 
-    train_set = to_dataset(encoded[:1_060_000], batch_size=batch_size, seed=model_config.seed, length=model_config.block_size, shuffle=True)
-    valid_set = to_dataset(encoded[1_060_000:], batch_size=batch_size, seed=model_config.seed, length=model_config.block_size)
+    dataset = to_dataset(encoded, batch_size=batch_size, seed=model_config.seed, length=model_config.block_size, shuffle=True)
 
-    return train_set, valid_set
+    dataset = dataset.shuffle(buffer_size=4096)
+
+    train_set = dataset.take(int(0.9 * encoded_len / (128 * 64)))
+    valid_set = dataset.skip(int(0.9 * encoded_len / (128 * 64)))
+
+    return train_set, valid_set, n_tokens
 
 
 def get_datasets_tiktok(batch_size, model_config):
@@ -44,12 +47,14 @@ def get_datasets_tiktok(batch_size, model_config):
 
     encoder = tiktoken.get_encoding("gpt2")
 
-    data_len = len(shakespear_txt)
+    encoded = encoder.encode_ordinary(shakespear_txt)
 
-    train_data = encoder.encode_ordinary(shakespear_txt[int(0.9 * data_len):])
-    valid_data = encoder.encode_ordinary(shakespear_txt[:int(0.9 * data_len)])
+    encoded_len = len(encoded)
 
-    train_set = to_dataset(train_data, batch_size=batch_size, seed=model_config.seed, length=model_config.block_size, shuffle=True)
-    valid_set = to_dataset(valid_data, batch_size=batch_size, seed=model_config.seed, length=model_config.block_size)
+    dataset = to_dataset(encoded, batch_size=batch_size, seed=model_config.seed, length=model_config.block_size, shuffle=True)
 
-    return train_set, valid_set
+    train_set = dataset.take(int(0.9 * encoded_len / (model_config.block_size * batch_size)))
+    valid_set = dataset.skip(int(0.9 * encoded_len / (model_config.block_size * batch_size)))
+
+    return train_set, valid_set, model_config.vocab_size
+

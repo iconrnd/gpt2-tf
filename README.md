@@ -18,4 +18,5 @@ https://github.com/karpathy/nanoGPT
 *  Checkpointing
 *  Tiny Shakespeare dataset for fast experiments
 *  Kept weird variables naming by Andrei to easily match with his PyTorch code :)
-*  flake8 compilant :) (except line lengths)
+*  flake8 compliant :) (except line lengths)
+*  block_size has the most signifianct impact on accuracy

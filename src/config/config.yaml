@@ -1,5 +1,5 @@
 globals:
-  batch_per_replica: 128
+  batch_per_replica: 16
   best_val_loss: 1e9
   weight_decay: 1e-1
   warmup_iters: 10
@@ -19,9 +19,9 @@ globals:
 gpt:
   n_layer: 4
   n_head: 4
-  n_embd: 32
-  block_size: 64
+  n_embd: 256
+  block_size: 2048
   bias: True
   vocab_size: 50257
-  dropout: 0.1
+  dropout: 0.2
   seed: 1337

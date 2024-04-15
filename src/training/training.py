@@ -28,9 +28,11 @@ def get_model_and_ctx(model_config, restore=False):
 
         global_batch_size = global_config.batch_per_replica * ctx.strategy.num_replicas_in_sync
 
-        train_set, valid_set = get_datasets_tiktok(global_batch_size, model_config)
+        train_set, valid_set, n_tokens = get_datasets_tiktok(global_batch_size, model_config)
         ctx.train_set_dist = ctx.strategy.experimental_distribute_dataset(train_set)
         ctx.valid_set_dist = ctx.strategy.experimental_distribute_dataset(valid_set.take(global_config.eval_iters))
+
+        model_config.vocab_size = n_tokens
 
         model = build_model(model_config)
 
