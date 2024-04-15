@@ -1,6 +1,6 @@
 # GPT2 in TensorFlow
 
-NanoGPT (GPT2) by Andrei Carpathy total conversion to TensorFlow with some additions.
+NanoGPT (GPT2) Transformer by Andrei Carpathy total conversion to TensorFlow with some additions.
 
 Based on the repo in PyTorch:
 https://github.com/karpathy/nanoGPT
